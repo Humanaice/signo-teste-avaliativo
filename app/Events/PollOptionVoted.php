@@ -20,6 +20,14 @@ class PollOptionVoted implements ShouldBroadcast
 
     /**
      * Create a new event instance.
+     * 
+     * @param PollOption $pollOption
+     * @return void
+     * 
+     * This constructor initializes the event with the given PollOption instance.
+     * It sets the option_id and votes properties based on the PollOption instance.
+     * The option_id is the ID of the poll option that was voted for,
+     * and votes is the number of votes that option has received.
      */
     public function __construct(PollOption $pollOption)
     {
