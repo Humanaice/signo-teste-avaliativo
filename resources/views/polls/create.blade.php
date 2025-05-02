@@ -231,6 +231,7 @@
                         showError('A enquete deve ter pelo menos 3 opções.');
                         return;
                     }
+                    state.lastOptionIndex--;
                     
                     optionDiv.remove();
                 });
