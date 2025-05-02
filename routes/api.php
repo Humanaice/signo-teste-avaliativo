@@ -14,16 +14,3 @@ use App\Http\Controllers\API\PollOptionsController;
 Route::apiResource('poll', PollController::class);
 Route::apiResource('poll-option', PollOptionsController::class);
 Route::post('poll-option/{id}/vote', [PollOptionsController::class, 'vote']);
-
-Route::get('/polls', function () {
-    return view('polls');
-});
-
-Route::get('/polls/create', function () {
-    return view('polls/create');
-});
-
-Route::get('/polls/edit/{id}', function ($id) {
-    return view('polls/edit', ['pollId' => $id]);
-});
-

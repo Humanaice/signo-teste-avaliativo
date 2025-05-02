@@ -72,7 +72,7 @@
                 <h1 class="text-3xl font-bold text-black dark:text-white mb-4 sm:mb-0">Enquetes</h1>
                 <div class="flex items-center gap-4">
                     <a
-                        href="{{ url('/api/polls/create') }}"
+                        href="{{ url('/create') }}"
                         class="rounded-md px-4 py-2 bg-[#FF2D20] text-white hover:bg-[#FF2D20]/90 focus:outline-none focus:ring-2 focus:ring-[#FF2D20] focus:ring-offset-2 dark:focus:ring-offset-black transition"
                         aria-label="Criar nova enquete"
                     >
@@ -125,7 +125,7 @@
                         <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-gray-200">Nenhuma enquete encontrada</h3>
                         <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Não há enquetes cadastradas no sistema.</p>
                         <div class="mt-6">
-                            <a href="{{ url('/api/polls/create') }}" class="inline-flex items-center rounded-md bg-[#FF2D20] px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[#FF2D20]/90 focus:outline-none focus:ring-2 focus:ring-[#FF2D20] focus:ring-offset-2 dark:focus:ring-offset-black">
+                            <a href="{{ url('/create') }}" class="inline-flex items-center rounded-md bg-[#FF2D20] px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[#FF2D20]/90 focus:outline-none focus:ring-2 focus:ring-[#FF2D20] focus:ring-offset-2 dark:focus:ring-offset-black">
                                 <svg class="-ml-0.5 mr-1.5 h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                     <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
                                 </svg>
@@ -155,7 +155,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             // Configurações da aplicação
             const config = {
-                apiBaseUrl: '{{ url('/api') }}',
+                apiBaseUrl: '{{  url('/api') }}',
                 csrfToken: document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
                 dateFormat: { 
                     day: '2-digit', 
@@ -401,7 +401,7 @@
                             </div>
                             <div class="flex items-center mt-2">
                                 <a 
-                                    href="/api/polls/edit/${poll.id}"
+                                    href="/edit/${poll.id}"
                                     class="rounded-md px-3 py-1.5 text-white bg-blue-500 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-zinc-800 transition-colors"
                                     aria-label="Editar enquete ${poll.title}"
                                 >

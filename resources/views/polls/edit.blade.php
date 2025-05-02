@@ -106,7 +106,7 @@
             // Inicializa a aplicação
             function init() {
                 // Extrai o ID da enquete da URL
-                const urlMatches = window.location.pathname.match(/\/polls\/edit\/(\d+)/);
+                const urlMatches = window.location.pathname.match(/\/edit\/(\d+)/);
                 if (!urlMatches || !urlMatches[1]) {
                     showError('ID de enquete inválido.');
                     window.location.href = '/';
