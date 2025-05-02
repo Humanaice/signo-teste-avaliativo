@@ -297,53 +297,8 @@
                 }
             }
             
-            async function createPollOptions(pollId) {
-                try {
-                    const options = Array.from(document.querySelectorAll('input[name="options[]"]'));
-                    const pollOptions = options
-                        .filter(option => option.value.trim() !== '')
-                        .map(option => ({
-                            poll_id: pollId,
-                            option_text: option.value.trim()
-                        }));
-                    
-                    console.log('Opções a serem enviadas:', pollOptions);
-                    
-                    // Se não houver opções para enviar, retorne falso
-                    if (pollOptions.length === 0) {
-                        console.error('Nenhuma opção válida para enviar');
-                        return false;
-                    }
-                    
-                    // Dados a serem enviados na requisição
-                    const requestData = { options: pollOptions };
-                    
-                    console.log('Objeto completo a ser enviado:', JSON.stringify(requestData));
-                    
-                    const response = await axios.post('/api/poll-options-batch', requestData, {
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value
-                        }
-                    });
-                    
-                    if (response.status === 201 || response.status === 200) {
-                        console.log('Opções criadas com sucesso:', response.data);
-                        return true;
-                    }
-                    
-                    console.error('Resposta inesperada da API ao criar opções:', response);
-                    return false;
-                    
-                } catch (error) {
-                    console.error('Erro ao criar opções em lote:', error);
-                    // Já que a enquete foi criada, mas as opções falharam, podemos tentar o método individual
-                    return await createPollOptionsIndividually(pollId);
-                }
-            }
-            
             // Método alternativo de criar opções individualmente se o lote falhar
-            async function createPollOptionsIndividually(pollId) {
+            async function createPollOptions(pollId) {
                 try {
                     const options = Array.from(document.querySelectorAll('input[name="options[]"]'))
                         .filter(option => option.value.trim() !== '');

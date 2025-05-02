@@ -1,73 +1,17 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+    <!-- Metadados básicos e CSRF token para requisições AJAX -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Enquetes - Sistema de Votação</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <style>
-        .poll-status {
-            display: inline-block;
-            padding: 0.25rem 0.75rem;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: 500;
-            margin-left: 0.5rem;
-        }
-        .status-not-started {
-            background-color: #dbeafe;
-            color: #1e40af;
-        }
-        .status-active {
-            background-color: #dcfce7;
-            color: #166534;
-        }
-        .status-ended {
-            background-color: #fecaca;
-            color: #991b1b;
-        }
-        @keyframes pulse-highlight {
-            0% { background-color: transparent; }
-            50% { background-color: rgba(255, 45, 32, 0.1); }
-            100% { background-color: transparent; }
-        }
-        .vote-update {
-            animation: pulse-highlight 1s ease-in-out;
-        }
-        .loader {
-            width: 40px;
-            height: 40px;
-            border: 3px solid rgba(255, 45, 32, 0.2);
-            border-radius: 50%;
-            border-top-color: #FF2D20;
-            animation: spin 1s ease-in-out infinite;
-            margin: 2rem auto;
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        .fade-in {
-            animation: fadeIn 0.5s ease-in;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-    </style>
 </head>
 <body class="font-sans antialiased bg-gray-50 text-black/80 dark:bg-black dark:text-white/70">
     <div class="relative min-h-screen">
-        <!-- Background Circle -->
-        <div class="absolute -left-20 top-0 max-w-[877px] opacity-10 dark:opacity-5">
-            <svg viewBox="0 0 415 415" xmlns="http://www.w3.org/2000/svg" class="h-full w-full fill-gray-700 dark:fill-white">
-                <path d="M207.5 0C93.2 0 0 93.1 0 207.5 0 321.9 93.2 415 207.5 415 321.8 415 415 321.9 415 207.5 415 93.1 321.8 0 207.5 0zm0 340c-73.2 0-132.5-59.3-132.5-132.5S134.3 75 207.5 75 340 134.3 340 207.5 280.7 340 207.5 340z"/>
-                <path d="M207.5 100c-59.4 0-107.5 48.1-107.5 107.5S148.1 315 207.5 315 315 266.9 315 207.5 266.9 100 207.5 100z"/>
-            </svg>
-        </div>
-
         <div class="relative w-full max-w-7xl mx-auto px-6 py-8">
-            <!-- Header -->
+            <!-- Cabeçalho com título e botão para criar enquete -->
             <header class="flex flex-col sm:flex-row items-center justify-between py-6">
                 <h1 class="text-3xl font-bold text-black dark:text-white mb-4 sm:mb-0">Enquetes</h1>
                 <div class="flex items-center gap-4">
@@ -86,15 +30,49 @@
                 </div>
             </header>
 
-            <!-- Main Content -->
+            <!-- Filtros e Busca -->
+            <div class="bg-white dark:bg-zinc-900 p-4 rounded-lg shadow mb-6">
+                <div class="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+                    <!-- Filtro por Status -->
+                    <div class="flex flex-wrap gap-2">
+                        <button id="filter-all" class="filter-btn filter-active px-3 py-1.5 rounded-md bg-gray-100 dark:bg-zinc-800 hover:bg-gray-200 dark:hover:bg-zinc-700 transition">
+                            Todas
+                        </button>
+                        <button id="filter-not-started" class="filter-btn px-3 py-1.5 rounded-md bg-gray-100 dark:bg-zinc-800 hover:bg-gray-200 dark:hover:bg-zinc-700 transition">
+                            Não iniciadas
+                        </button>
+                        <button id="filter-active" class="filter-btn px-3 py-1.5 rounded-md bg-gray-100 dark:bg-zinc-800 hover:bg-gray-200 dark:hover:bg-zinc-700 transition">
+                            Em andamento
+                        </button>
+                        <button id="filter-ended" class="filter-btn px-3 py-1.5 rounded-md bg-gray-100 dark:bg-zinc-800 hover:bg-gray-200 dark:hover:bg-zinc-700 transition">
+                            Finalizadas
+                        </button>
+                    </div>
+                    
+                    <!-- Busca -->
+                    <div class="relative w-full md:w-64">
+                        <input 
+                            id="search-input"
+                            type="text" 
+                            placeholder="Buscar enquetes..." 
+                            class="w-full px-4 py-2 pr-10 rounded-md border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-[#FF2D20] dark:focus:ring-[#FF2D20]/70"
+                        >
+                        <svg class="absolute right-3 top-2.5 h-5 w-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Conteúdo principal - lista de enquetes -->
             <main class="mt-6">
-                <!-- Loading State -->
+                <!-- Indicador de carregamento -->
                 <div id="loading-indicator" class="py-10 text-center">
                     <div class="loader"></div>
                     <p class="mt-4 text-gray-500 dark:text-gray-400">Carregando enquetes...</p>
                 </div>
                 
-                <!-- Error Message (hidden by default) -->
+                <!-- Mensagem de erro (oculta por padrão) -->
                 <div id="error-message" class="hidden col-span-full flex justify-center">
                     <div class="rounded-md bg-red-50 dark:bg-red-900/20 p-4 max-w-2xl w-full">
                         <div class="flex">
@@ -116,7 +94,7 @@
                     </div>
                 </div>
                 
-                <!-- Empty State (hidden by default) -->
+                <!-- Estado vazio - sem enquetes (oculta por padrão) -->
                 <div id="empty-state" class="hidden col-span-full flex justify-center">
                     <div class="py-10 text-center max-w-md">
                         <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
@@ -135,13 +113,13 @@
                     </div>
                 </div>
 
-                <!-- Polls Grid -->
+                <!-- Grade de enquetes (oculta até o carregamento) -->
                 <div id="polls" class="hidden grid gap-6 md:grid-cols-2 xl:grid-cols-3"></div>
             </main>
         </div>
     </div>
 
-    <!-- Success Toast -->
+    <!-- Toast de confirmação para feedback de ações -->
     <div id="success-toast" class="fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg transform translate-y-10 opacity-0 transition-all duration-300 z-50">
         <div class="flex items-center">
             <svg class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
@@ -153,7 +131,7 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // Configurações da aplicação
+            // Configurações da aplicação - URLs, tokens e formatos
             const config = {
                 apiBaseUrl: '{{  url('/api') }}',
                 csrfToken: document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
@@ -169,15 +147,17 @@
                 animationDuration: 300
             };
 
-            // Estado da aplicação
+            // Estado global da aplicação
             const state = {
                 polls: [],
                 loading: true,
                 error: null,
-                votingInProgress: new Set()
+                votingInProgress: new Set(),
+                filter: 'all',      // filtro atual: 'all', 'not-started', 'active', 'ended'
+                searchQuery: ''     // texto de busca
             };
 
-            // Elementos do DOM
+            // Elementos do DOM para manipulação mais eficiente
             const elements = {
                 pollsContainer: document.getElementById('polls'),
                 loadingIndicator: document.getElementById('loading-indicator'),
@@ -186,25 +166,60 @@
                 retryButton: document.getElementById('retry-button'),
                 emptyState: document.getElementById('empty-state'),
                 successToast: document.getElementById('success-toast'),
-                toastMessage: document.getElementById('toast-message')
+                toastMessage: document.getElementById('toast-message'),
+                filterAll: document.getElementById('filter-all'),
+                filterNotStarted: document.getElementById('filter-not-started'),
+                filterActive: document.getElementById('filter-active'),
+                filterEnded: document.getElementById('filter-ended'),
+                searchInput: document.getElementById('search-input')
             };
 
-            // Inicialização
+            // Inicialização da aplicação
             init();
 
             function init() {
                 setupEventListeners();
                 setupDarkMode();
                 loadPolls();
-                setupEcho();
+                setupEcho();  // Configura WebSockets para atualizações em tempo real
             }
 
-            // Configuração de listeners de eventos
+            // Configura os ouvintes de eventos da interface
             function setupEventListeners() {
                 elements.retryButton.addEventListener('click', loadPolls);
+                
+                // Filtros
+                elements.filterAll.addEventListener('click', () => setFilter('all'));
+                elements.filterNotStarted.addEventListener('click', () => setFilter('not-started'));
+                elements.filterActive.addEventListener('click', () => setFilter('active'));
+                elements.filterEnded.addEventListener('click', () => setFilter('ended'));
+                
+                // Busca
+                elements.searchInput.addEventListener('input', handleSearch);
             }
 
-            // Funções de UI
+            // Função para alterar o filtro ativo
+            function setFilter(filter) {
+                state.filter = filter;
+                
+                // Atualiza visuais dos botões
+                document.querySelectorAll('.filter-btn').forEach(btn => {
+                    btn.classList.remove('filter-active');
+                });
+                
+                document.getElementById(`filter-${filter}`).classList.add('filter-active');
+                
+                // Aplica o filtro
+                renderPolls();
+            }
+
+            // Função para lidar com a busca
+            function handleSearch(e) {
+                state.searchQuery = e.target.value.toLowerCase().trim();
+                renderPolls();
+            }
+
+            // Funções de UI para controlar visibilidade dos componentes
             function showLoading(show = true) {
                 elements.loadingIndicator.style.display = show ? 'block' : 'none';
                 state.loading = show;
@@ -247,7 +262,7 @@
                 }, config.toastDuration);
             }
 
-            // Funções de utilidade
+            // Formata datas para exibição no formato brasileiro
             function formatDate(dateString) {
                 if (!dateString) return 'Data não informada';
                 
@@ -290,6 +305,7 @@
                 }
             }
 
+            // Determina o status da enquete comparando datas
             function getPollStatus(startDate, endDate) {
                 const now = new Date();
                 let start, end;
@@ -315,7 +331,7 @@
                 }
             }
 
-            // Funções de data
+            // Carrega as enquetes da API
             async function loadPolls() {
                 showLoading(true);
                 showError(false);
@@ -355,16 +371,49 @@
                 }
             }
 
+            // Substitua a função renderPolls
             function renderPolls() {
                 const pollsContainer = elements.pollsContainer;
                 pollsContainer.innerHTML = '';
                 
-                state.polls.forEach(poll => {
-                    const pollElement = createPollElement(poll);
-                    pollsContainer.appendChild(pollElement);
+                // Filtrar as enquetes
+                const filteredPolls = state.polls.filter(poll => {
+                    // Aplicar filtro de status
+                    if (state.filter !== 'all') {
+                        const status = getPollStatus(poll.start_date, poll.end_date).status;
+                        if (state.filter !== status) return false;
+                    }
+                    
+                    // Aplicar filtro de busca
+                    if (state.searchQuery) {
+                        const title = poll.title.toLowerCase();
+                        if (!title.includes(state.searchQuery)) return false;
+                    }
+                    
+                    return true;
                 });
+                
+                // Mostrar mensagem se não há resultados
+                if (filteredPolls.length === 0) {
+                    const noResults = document.createElement('div');
+                    noResults.className = 'col-span-full text-center py-8 text-gray-500 dark:text-gray-400';
+                    noResults.innerHTML = `
+                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                        <p class="mt-2">Nenhuma enquete encontrada com os filtros atuais.</p>
+                    `;
+                    pollsContainer.appendChild(noResults);
+                } else {
+                    // Renderizar enquetes filtradas
+                    filteredPolls.forEach(poll => {
+                        const pollElement = createPollElement(poll);
+                        pollsContainer.appendChild(pollElement);
+                    });
+                }
             }
 
+            // Cria o elemento HTML para uma enquete
             function createPollElement(poll) {
                 const pollStatus = getPollStatus(poll.start_date, poll.end_date);
                 const isActive = pollStatus.status === 'active';
@@ -426,6 +475,7 @@
                 return pollElement;
             }
 
+            // Cria o elemento HTML para uma opção de enquete
             function createOptionElement(option, isActive) {
                 return `
                     <div class="bg-gray-50 dark:bg-zinc-800/50 rounded-md p-3">
@@ -449,6 +499,7 @@
                 `;
             }
 
+            // Processa o voto em uma opção de enquete
             async function handleVote(optionId, event) {
                 // Evitar cliques duplicados
                 if (state.votingInProgress.has(optionId)) return;
@@ -512,16 +563,17 @@
                 }
             }
 
-            // Configuração do Echo para atualizações em tempo real
+            // Configura o Laravel Echo para WebSockets
             function setupEcho() {
                 if (window.Echo) {
                     configureEchoListeners();
                 } else {
-                    // Tentar novamente em 100ms se o Echo não estiver disponível
+                    // Tenta novamente se Echo não estiver pronto
                     setTimeout(setupEcho, 100);
                 }
             }
 
+            // Configura os ouvintes para eventos em tempo real
             function configureEchoListeners() {
                 window.Echo.channel('polls')
                     .listen('PollOptionVoted', handleEchoVoteUpdate)
@@ -536,6 +588,7 @@
                     });
             }
 
+            // Atualiza a contagem de votos quando recebe evento via WebSocket
             function handleEchoVoteUpdate(data) {
                 const voteElement = document.getElementById(`votes-${data.option_id}`);
                 if (voteElement) {
@@ -548,7 +601,7 @@
                 }
             }
 
-            // Configuração do tema escuro
+            // Configura o modo escuro baseado na preferência do sistema
             function setupDarkMode() {
                 // Verifica a preferência do usuário
                 const darkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -566,7 +619,7 @@
                 });
             }
 
-            // Funções de segurança
+            // Escapa HTML para prevenir XSS
             function escapeHtml(text) {
                 const div = document.createElement('div');
                 div.textContent = text;
