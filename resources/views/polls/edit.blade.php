@@ -145,19 +145,38 @@
             };
             
             // Função para exibir mensagens de erro
-            function showError(message, redirect = false) {
-                alert(message);
-                if (redirect) {
-                    window.location.href = '/';
-                }
+            function showToast(message, type = 'success', redirect = false) {
+                const toast = document.getElementById(type === 'success' ? 'success-toast' : 'error-toast');
+                const messageElement = document.getElementById(type === 'success' ? 'toast-message' : 'error-message');
+                
+                // Define a mensagem e mostra o toast
+                messageElement.textContent = message;
+                toast.style.transform = 'translateY(0)';
+                toast.style.opacity = '1';
+                
+                return new Promise(resolve => {
+                    // Após 3 segundos, esconde o toast e resolve a promise
+                    setTimeout(() => {
+                        toast.style.transform = 'translateY(10px)';
+                        toast.style.opacity = '0';
+                        
+                        // Dá tempo para a animação de desaparecimento
+                        setTimeout(() => {
+                            if (redirect) {
+                                window.location.href = '/';
+                            }
+                            resolve();
+                        }, 300);
+                    }, 3000);
+                });
             }
-            
-            // Função para exibir mensagens de sucesso
+
+            function showError(message, redirect = false) {
+                return showToast(message, 'error', redirect);
+            }
+
             function showSuccess(message, redirect = false) {
-                alert(message);
-                if (redirect) {
-                    window.location.href = '/';
-                }
+                return showToast(message, 'success', redirect);
             }
             
             // Altera o estado do botão durante operações assíncronas
@@ -220,7 +239,7 @@
                         errorMessage = 'Erro de conexão. Verifique sua internet.';
                     }
                     
-                    showError(errorMessage, true);
+                    await showError(errorMessage, true);
                     return false;
                 } finally {
                     setLoading(false);
@@ -291,12 +310,35 @@
                 
                 // Se o option_id não estiver vazio (opção existente), adicione à lista de deletados
                 if (optionId) {
-                    const confirmed = confirm('Tem certeza que deseja deletar esta opção?');
-                    if (confirmed) {
+                    // Cria um modal temporário para confirmar a exclusão da opção
+                    const optionText = optionDiv.querySelector('input[name="options[]"]').value;
+                    
+                    // Adicione temporariamente um modal de confirmação ao DOM
+                    const tempModal = document.createElement('div');
+                    tempModal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+                    tempModal.innerHTML = `
+                        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full">
+                            <h3 class="text-xl font-bold mb-4 text-red-500">Confirmar Exclusão</h3>
+                            <p class="mb-6">Tem certeza que deseja excluir a opção "${optionText}"?</p>
+                            <div class="flex justify-end space-x-4">
+                                <button id="cancelDeleteOption" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 transition">Cancelar</button>
+                                <button id="confirmDeleteOption" class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition">Excluir</button>
+                            </div>
+                        </div>
+                    `;
+                    document.body.appendChild(tempModal);
+                    
+                    // Adiciona os event listeners para os botões
+                    document.getElementById('cancelDeleteOption').addEventListener('click', () => {
+                        document.body.removeChild(tempModal);
+                    });
+                    
+                    document.getElementById('confirmDeleteOption').addEventListener('click', () => {
                         state.deletedOptionIds.push(optionId);
                         optionDiv.remove();
                         console.log('Opção existente marcada para deleção:', optionId);
-                    }
+                        document.body.removeChild(tempModal);
+                    });
                 } else {
                     // Se for uma nova opção, apenas remova do DOM
                     optionDiv.remove();
@@ -410,7 +452,7 @@
                     // Aguarda todas as operações de opções finalizarem
                     await Promise.all([...deletionPromises, ...updatePromises, ...createPromises]);
                     
-                    showSuccess('Enquete atualizada com sucesso!', true);
+                    await showSuccess('Enquete atualizada com sucesso!', true);
                 } catch (error) {
                     console.error('Erro ao processar atualização da enquete:', error);
                     
@@ -419,7 +461,7 @@
                         errorMessage = `Erro: ${error.response.data.message}`;
                     }
                     
-                    showError(errorMessage);
+                    await showError(errorMessage);
                 } finally {
                     setButtonState(elements.updateButton, false, originalButtonText);
                 }
@@ -432,7 +474,7 @@
                 try {
                     const response = await axios.delete(state.apiUrl);
                     if (response.status === 200) {
-                        showSuccess('Enquete deletada com sucesso!', true);
+                        await showSuccess('Enquete deletada com sucesso!', true);
                     }
                 } catch (error) {
                     console.error('Erro ao deletar a enquete:', error);
@@ -442,7 +484,7 @@
                         errorMessage = `Erro: ${error.response.data.message}`;
                     }
                     
-                    showError(errorMessage);
+                    await showError(errorMessage);
                 } finally {
                     setButtonState(elements.confirmDelete, false, originalButtonText);
                     toggleModal(false);
@@ -453,5 +495,24 @@
             init();
         });
     </script>
+    
+    <!-- Notificações toast -->    
+    <div id="success-toast" class="fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg transform translate-y-10 opacity-0 transition-all duration-300 z-50">
+        <div class="flex items-center">
+            <svg class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+            </svg>
+            <span id="toast-message">Operação realizada com sucesso!</span>
+        </div>
+    </div>
+
+    <div id="error-toast" class="fixed bottom-4 right-4 bg-red-500 text-white px-4 py-2 rounded shadow-lg transform translate-y-10 opacity-0 transition-all duration-300 z-50">
+        <div class="flex items-center">
+            <svg class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" />
+            </svg>
+            <span id="error-message">Ocorreu um erro!</span>
+        </div>
+    </div>
 </body>
 </html>

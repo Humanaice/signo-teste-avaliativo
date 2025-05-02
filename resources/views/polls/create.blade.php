@@ -123,12 +123,33 @@
                 return date.toISOString().split('T')[0]; // Retorna formato YYYY-MM-DD
             }
             
-            function showError(message) {
-                alert(message);
+            function showToast(message, type = 'success') {
+                const toast = document.getElementById(type === 'success' ? 'success-toast' : 'error-toast');
+                const elementoMensagem = document.getElementById(type === 'success' ? 'toast-message' : 'error-message');
+                
+                // Define a mensagem e mostra o toast
+                elementoMensagem.textContent = message;
+                toast.style.transform = 'translateY(0)';
+                toast.style.opacity = '1';
+                
+                return new Promise(resolve => {
+                    // Após 3 segundos, esconde o toast e resolve a promise
+                    setTimeout(() => {
+                        toast.style.transform = 'translateY(10px)';
+                        toast.style.opacity = '0';
+                        
+                        // Dá tempo para a animação de desaparecimento
+                        setTimeout(resolve, 300);
+                    }, 3000);
+                });
             }
-            
+
+            function showError(message) {
+                return showToast(message, 'error');
+            }
+
             function showSuccess(message) {
-                alert(message);
+                return showToast(message, 'success');
             }
             
             function setLoading(isLoading) {
@@ -243,18 +264,18 @@
                     const optionsCreated = await createPollOptions(pollData.id);
                     if (!optionsCreated) {
                         console.error('Falha ao criar opções da enquete');
-                        showError('A enquete foi criada, mas houve um problema ao adicionar as opções. Por favor, tente editar a enquete para adicionar opções.');
+                        await showError('A enquete foi criada, mas houve um problema ao adicionar as opções. Por favor, tente editar a enquete para adicionar opções.');
                         window.location.href = '/';
                         return;
                     }
                     
-                    // 3. Redireciona para a lista de enquetes
-                    showSuccess('Enquete criada com sucesso!');
+                    // 3. Exibe o toast de sucesso e aguarda antes de redirecionar
+                    await showSuccess('Enquete criada com sucesso!');
                     window.location.href = '/';
                     
                 } catch (error) {
                     console.error('Erro no processo de criação da enquete:', error);
-                    showError('Ocorreu um erro ao criar a enquete. Por favor, tente novamente.');
+                    await showError('Ocorreu um erro ao criar a enquete. Por favor, tente novamente.');
                 } finally {
                     setLoading(false);
                 }
@@ -343,5 +364,24 @@
             }
         });
     </script>
+    
+     <!-- Notificações toast -->
+    <div id="success-toast" class="fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg transform translate-y-10 opacity-0 transition-all duration-300 z-50">
+        <div class="flex items-center">
+            <svg class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+            </svg>
+            <span id="toast-message">Operação realizada com sucesso!</span>
+        </div>
+    </div>
+
+    <div id="error-toast" class="fixed bottom-4 right-4 bg-red-500 text-white px-4 py-2 rounded shadow-lg transform translate-y-10 opacity-0 transition-all duration-300 z-50">
+        <div class="flex items-center">
+            <svg class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" />
+            </svg>
+            <span id="error-message">Ocorreu um erro!!</span>
+        </div>
+    </div>
 </body>
 </html>
